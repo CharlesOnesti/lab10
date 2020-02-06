@@ -1,3 +1,4 @@
+# CS51 Mods: Removed .merlin
 
 # Created by https://www.gitignore.io/api/ocaml,macos,linux,windows
 # Edit at https://www.gitignore.io/?templates=ocaml,macos,linux,windows
@@ -66,9 +67,6 @@ _build/
 # oasis generated files
 setup.data
 setup.log
-
-# Merlin configuring file for Vim and Emacs
-.merlin
 
 # Dune generated files
 *.install
