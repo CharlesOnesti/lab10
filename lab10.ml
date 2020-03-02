@@ -19,8 +19,8 @@ and insertion sort by timing these functions on the same inputs of
 various lengths. The ability to perform empirical analysis of programs
 will often prove useful.
 
-Throughout this lab you may find various functions in the CS51 module
-to be useful, as well as OCaml's Random library module
+Throughout this lab you may find various functions in the `Absbook`
+module to be helpful, as well as OCaml's `Random` library module
 (https://caml.inria.fr/pub/docs/manual-ocaml/libref/Random.html).
 
 ......................................................................
@@ -33,7 +33,7 @@ let random_list (length : int) : int list =
 
 (*....................................................................
 Exercise 2: Write a function `time_sort` that, given an `int list ->
-int list` sorting function and a list of integers, returns a float
+int list` sorting function and a list of integers, returns a `float`
 indicating how long in seconds the sort takes.
 ....................................................................*)
 
@@ -56,7 +56,7 @@ module InsertSort : SORT =
     let rec insert (lt : 'a -> 'a -> bool)
                    (xs : 'a list)
                    (x : 'a)
-            : 'a list =
+                 : 'a list =
       match xs with
       | [] -> [x]
       | hd :: tl -> if lt x hd then x :: xs
@@ -64,7 +64,7 @@ module InsertSort : SORT =
       
     let rec sort (lt : 'a -> 'a -> bool)
                  (xs : 'a list)
-            : 'list =
+               : 'list =
       match xs with
       | [] -> []
       | hd :: tl -> insert lt (sort lt tl) hd ;;
@@ -72,11 +72,13 @@ module InsertSort : SORT =
 
 module MergeSort : SORT = 
   struct
-    let rec split xs ys zs = 
-      match xs with 
-      | [] -> ys, zs
-      | x :: rest -> split rest zs (x :: ys) 
-      
+    let rec split (xs : 'a list) =
+      match xs with
+      | [] -> [], []
+      | [x] -> [x], []
+      | first :: second :: rest -> let rest1, rest2 = split rest in
+                                   first :: rest1, second :: rest2
+        
     let rec merge lt xs ys = 
       match xs, ys with 
       | [], _ -> ys
@@ -89,7 +91,7 @@ module MergeSort : SORT =
       match xs with 
       | []
       | _ :: [] -> xs
-      | _ -> let first, second = split xs [] [] in
+      | _ -> let first, second = split xs in
              merge lt (sort lt first) (sort lt second) 
   end ;;
 
@@ -126,18 +128,18 @@ the functions defined below, state in which big-O class(es) the
 function belongs.
 
 To allow us to check answers, we've defined an OCaml data type,
-complexity, with various commonly used big-O classes. The name to
-function mapping is set out below. We will use informal function
-notation in this lab. For more on informal vs. formal notation, please
-refer to the reading for today's lab.
+`complexity`, with various commonly used big-O classes. The
+name-to-function mapping is set out below. We will use informal
+function notation in this lab. For more on informal versus formal
+notation, please refer to the reading for today's lab.
 
-Constant    -> O(1)
-Logarithmic -> O(log(n))
-Linear      -> O(n)
-LogLinear   -> O(n log(n))
-Quadratic   -> O(n^2)
-Cubic       -> O(n^3)
-Exponential -> O(2^n)
+    Constant    -> O(1)
+    Logarithmic -> O(log(n))
+    Linear      -> O(n)
+    LogLinear   -> O(n log(n))
+    Quadratic   -> O(n^2)
+    Cubic       -> O(n^3)
+    Exponential -> O(2^n)
 
 Because functions can be in more than one complexity class, the format
 of the solution to each exercise is a list of complexity classes. By
@@ -178,8 +180,9 @@ considering asymptotic performance of functions. We saw empirically
 that on large inputs, merge sort worked faster than insertion
 sort. The ability to disregard constants tells us that merge sort will
 eventually be faster than insertion sort, even if we add a constant
-amount of time to merge sort's performance. Let's do this and test the
-results empirically. 
+amount of time to merge sort's performance. 
+
+Let's actually do this and test the results empirically!
 
 Here is a version of merge sort that inserts a small delay (.05
 seconds), to simulate a version of the function with the same
@@ -187,11 +190,9 @@ asymptotic complexity but that is a constant amount slower. *)
 
 module DelayMergeSort : SORT =
   struct
-    (* DelayMergeSort first sleeps for a predetermined
-       period of time, then runs our generic MergeSort sort.
-       This sleep will add a constant amount of time to
-       each run of DelayMergeSort.
-     *)
+    (* DelayMergeSort first sleeps for a predetermined period of time,
+       then runs our generic MergeSort sort.  This sleep will add a
+       constant amount of time to each run of DelayMergeSort.  *)
     let sort (lt : 'a -> 'a -> bool)
              (xs : 'a list)
            : 'a list =
@@ -228,8 +229,8 @@ MergeSort takes, DoubleMergeSort will thus take twice as long. *)
 
 module DoubleMergeSort : SORT =
   struct
-    (* By sorting the list twice, we double the time
-       MergeSort takes *)
+    (* By sorting the list twice, we double the time MergeSort
+       takes *)
     let sort (lt : 'a -> 'a -> bool)
              (xs : 'a list)
            : 'a list =
@@ -351,9 +352,9 @@ Recurrence equations generally consider two cases:
 1. A base case
 2. A recursive case
 
-Once you have formulated the recursive case, you can use the method
-of "unfolding" described in the reading to determine the time
-complexity of the functions.
+Once you have formulated the recursive case, you can use the method of
+"unfolding" described in the reading to determine the time complexity
+of the functions.
 
 In each of the exercises below, we present a function in Ocaml. Your
 task is to define the recurrence equations for that function, and then
@@ -370,7 +371,7 @@ here. When finding the time complexity, we would like you to use the
 tightest possible big-O class.
 
 Many of the recurrences have various constants. We have defined a
-global variable, k, for you to use for *all* of the constants in your
+global variable, `k`, for you to use for *all* of the constants in your
 Ocaml formulation of the recurrence equations. Again, the example
 below should clarify. *)
 
@@ -440,8 +441,8 @@ equations, and add them to the lab using the method above.
 (*....................................................................
 Exercise 10: Sum recurrence equations
 
-Formulate the recurrence equations and determine the time
-complexity of the `sum` function, defined below.
+Formulate the recurrence equations and determine the time complexity
+of the `sum` function, defined below.
 ....................................................................*)
 
 let rec sum (x : int list) : int =
@@ -461,9 +462,8 @@ let sum_complexity () : complexity =
 (*....................................................................
 Exercise 11: Divider Recurrence Equations
 
-Please formulate the recurrence equations and determine the time
-complexity of `divider` in terms of the value of its argument `x`,
-defined below.
+Formulate the recurrence equations and determine the time complexity
+of `divider` in terms of the value of its argument `x`, defined below.
 ....................................................................*)
 
 let rec divider (x : int) : int =
@@ -489,18 +489,19 @@ time complexity of `find_min`.
 ....................................................................*)
 
 let rec find_min (xs : int list) : int =
+  
   let rec split (xs : 'a list) =
     match xs with
-    | [] -> ([], [])
-    | [x] -> ([x], [])
-    | h1 :: h2 :: tl ->
-       let l1, l2 = split tl in
-       (h1 :: l1, h2 :: l2) in
+    | [] -> [], []
+    | [x] -> [x], []
+    | first :: second :: rest -> let rest1, rest2 = split rest in
+                                 first :: rest1, second :: rest2 in
+  
   match xs with
   | [] -> raise (Invalid_argument "Empty List")
   | [x] -> x
-  | _ -> let l1, l2 = split xs in
-         min (find_min l1) (find_min l2) ;;
+  | _ -> let xs1, xs2 = split xs in
+         min (find_min xs1) (find_min xs2) ;;
 
 let time_split (n : int) : int =
   failwith "time_split not yet implemented" ;;
@@ -525,9 +526,9 @@ let sign_product (x : int) (y : int) : int =
         if x >= 0 then 1 else ~-1 in
     (sign x) * (sign y);;
 
-(* Repeated addition simply adds x to itself y times. To multiply two
-n-digit numbers together using this algorithm takes time O(n 10^n). It
-is thus tremendously inefficient. *)
+(* 1. Repeated addition simply adds x to itself y times. To multiply
+two n-digit numbers together using this algorithm takes time O(n
+10^n). It is thus tremendously inefficient. *)
 
 let mult_repeated_addition (x : int) (y : int) : int =
   let rec helper (y : int) (sum : int) =
@@ -536,9 +537,10 @@ let mult_repeated_addition (x : int) (y : int) : int =
     else helper (y - 1) (sum + (abs x)) in
   helper (abs y) 0 * (sign_product x y) ;;
   
-(* The gradeschool multiplication algorithm is the algorithm one would
-use when doing multiplication of large numbers on paper. To multiply
-two n-digit numbers together using this algorithm takes time O(n^2) *)
+(* 2. The gradeschool multiplication algorithm is the algorithm one
+would use when doing multiplication of large numbers on paper. To
+multiply two n-digit numbers together using this algorithm takes time
+O(n^2) *)
   
 let mult_grade_school (x : int) (y : int) : int =
   let product_sign = sign_product x y in
@@ -561,14 +563,14 @@ let mult_grade_school (x : int) (y : int) : int =
          + iterate_y (y / 10) (placevalue * base) in
   product_sign * iterate_y y 1 ;;
 
-(* The Karatsuba algorithm is a multiplication algorithm that utilizes
-a divide-and-conquer approach. It was divised in 1960 by 23-year-old
-student Anatoly Karatsuba after his Professor Andrey Kolmogorov
-conjectured that the fastest possible multiplication algorithm would
-be lower bounded (that is, no faster than) O(n^2).  Karatsuba's
-algorithm disproved that conjecture. To multiply two n-digit numbers,
-Karatsuba's algorithm runs in O(n^(log_2 3)), that is, n to the power
-of log base 2 of 3, which is about n^1.4.
+(* 3. The Karatsuba algorithm is a multiplication algorithm that
+utilizes a divide-and-conquer approach. It was divised in 1960 by
+23-year-old student Anatoly Karatsuba after his Professor Andrey
+Kolmogorov conjectured that the fastest possible multiplication
+algorithm would be lower bounded (that is, no faster than) O(n^2).
+Karatsuba's algorithm disproved that conjecture. To multiply two
+n-digit numbers, Karatsuba's algorithm runs in O(n^(log_2 3)), that
+is, n to the power of log base 2 of 3, which is about n^1.4.
 
 *You do not need to understand the algorithm for this class*, but can
 find out more on Wikipedia if interested:
@@ -593,8 +595,8 @@ let mult_karatsuba (x : int) (y : int) : int =
          + half_place * (b - c - a) + a in
   (sign_product x y) * karatsuba (abs x) (abs y) ;;
 
-  (*....................................................................
-Exercise 13: Write a function, time_multiply, that, given a
+(*....................................................................
+Exercise 13: Write a function `time_multiply` that, given a
 multiplication function and two integers, times how long in seconds
 the algorithm takes to multiply the integers.
 ....................................................................*)
