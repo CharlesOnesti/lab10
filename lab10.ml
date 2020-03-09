@@ -29,7 +29,7 @@ specified length of random integers between 0 and 999.
 ....................................................................*)
 
 let random_list (length : int) : int list =
-  failwith "random_list not implemented" ;;
+  List.init length (fun _ -> Random.int 1000) ;;
 
 (*....................................................................
 Exercise 2: Write a function `time_sort` that, given an `int list ->
@@ -38,7 +38,8 @@ indicating how long in seconds the sort takes.
 ....................................................................*)
 
 let time_sort (sort : int list -> int list) (lst : int list) : float =
-  failwith "time_sort not implemented";;
+  let _result, time = Absbook.call_timed sort lst in
+  time ;;
 
 (* We've provided implementations of merge sort and insertion sort
 here as modules satisfying the `SORT` signature so that you have some
@@ -101,21 +102,93 @@ module. List the functions provided by the `MergeSort` module. Call a
 staff member over to check your answer.
 ....................................................................*)
 
+(* Both modules provide a function
+
+       sort : ('a -> 'a -> bool) -> 'a list -> 'a list
+   
+   and no other functions, as specified by the SORT signature. In
+   particular, the functions insert, split, and merge are not
+   accessible outside the module. *)
+
 (*....................................................................
 Exercise 4: Compare the time it takes for merge sort and insertion
 sort to run on lists of random ints of length 10 and 1000. We've
 included an implementation of merge and insertion sort below.
 ....................................................................*)
   
-(* Fill in the table below:
+(* A first attempt to fill in the table may have included running the
+   following code:
 
-                |    List length 10    |  List length 1000
-                |    Time (seconds)    |  Time (seconds)
-------------------------------------------------------------
-Insertion Sort  |                      |
-------------------------------------------------------------
-Merge Sort      |                      |
-------------------------------------------------------------
+     time_sort (InsertSort.sort ( < )) (random_list 10);;
+     time_sort (InsertSort.sort ( < )) (random_list 1000) ;;
+     time_sort (MergeSort.sort ( < )) (random_list 10) ;;
+     time_sort (MergeSort.sort ( < )) (random_list 1000) ;;
+
+   However, this method of comparing the functions will not be
+   entirely accurate: merge sort and insertion sort are running on
+   different input lists. Though the lists are the same length, they
+   may be out of order to a different degree. Just as when conducting
+   scientific experiments in a laboratory, we need to keep everything
+   but our value of interest (in this case the sorting function)
+   constant to create a fair comparison.
+
+   Thus, our method of filling in the table looked as below:
+
+     let shortlist : int list = random_list 10 ;;
+     let longlist : int list = random_list 1000 ;;
+
+     time_sort (InsertSort.sort (<)) shortlist ;;
+     time_sort (InsertSort.sort (<)) longlist ;;
+     time_sort (MergeSort.sort (<)) shortlist ;;
+     time_sort (MergeSort.sort (<)) longlist ;;
+
+   Using this method, we generated the following times:
+
+                   |    List length 10    |  List length 1000
+                   |    Time (seconds)    |  Time (seconds)
+   ------------------------------------------------------------
+   Insertion Sort  |    0.00000215        |   0.0107
+   ------------------------------------------------------------
+   Merge Sort      |    0.00000405        |   0.000967
+   ------------------------------------------------------------
+
+   In summary, merge sort is a little slower on the short list but
+   much faster on the long list, consistent with its better
+   asymptotic complexity.
+
+   Generally when running experiments, it is good practice to run
+   more than one trial. We can do this for our timing as well to
+   increase our confidence in the time each algorithm takes. We may
+   start by writing a function that runs a number of trials and
+   averages the time of the result.
+
+   let run_sort_trials (num : int)
+                       (timer : (int list -> int list) -> int list -> float)
+                       (sort : (int list -> int list))
+                       (input : int list)
+                     : float =
+       let average (lst : float list) =
+           (List.fold_left ( +. ) 0. lst) 
+           /. float_of_int (List.length lst) in
+       List.map (fun _ -> timer sort input)
+                (CS51.range 1 num)
+       |> average ;;
+
+   We can then find the average of 50 trials for each list length.
+
+   run_sort_trials 50 time_sort (InsertSort.sort ( < )) shortlist ;;
+   run_sort_trials 50 time_sort (InsertSort.sort ( < )) longlist ;;
+   run_sort_trials 50 time_sort (MergeSort.sort ( < )) shortlist ;;
+   run_sort_trials 50 time_sort (MergeSort.sort ( < )) longlist ;;
+
+                   |    50 Trial Average  |  50 Trial Average
+                   |    List length 10    |  List length 1000
+                   |    Time (seconds)    |  Time (seconds)
+   ------------------------------------------------------------
+   Insertion Sort  |    0.00000178        |   0.00821
+   ------------------------------------------------------------
+   Merge Sort      |    0.00000198        |   0.000827
+   ------------------------------------------------------------
  *)
 
 (*====================================================================
@@ -161,20 +234,30 @@ let exercise5a () : complexity list =
 
 (* f(x) = 0 *)
 let exercise5b () : complexity list =
-  failwith "exercise5b not implemented" ;;
-
-(* f(x) = 3 x^2 + 2 x + 4 *)
-let exercise5c () : complexity list=
-  failwith "exercise5c not implemented" ;;
+  [Constant; Logarithmic; Linear; LogLinear; Quadratic; Cubic; Exponential] ;;
+  
+(* f(x) = 3 x^2 + 2 x + 4  *)
+let exercise5c () : complexity list =
+  [Quadratic; Cubic; Exponential] ;;
 
 (* f(x) = (2 x - 3) log(x) + 100 x *)
 let exercise5d () : complexity list =
-  failwith "exercise5d not implemented" ;;
+  [LogLinear; Quadratic; Cubic; Exponential] ;;
 
 (* f(x) = x (x^2 + x) *)
 let exercise5e () : complexity list =
-  failwith "exercise5e not implemented" ;;
+  [Cubic; Exponential] ;;
 
+(* Note: Often, we are most interested in the tightest big-O class a
+   function belongs to. When discussing functions such as f(x) = x^2,
+   you may hear someone say f is O(x^2). However, for f to be O(g), f
+   simply grows as slow or slower than g. Thus, we could also say that
+   for f(x) = x^2, f is O(2^x).  We will be explicit regarding
+   situations in which we would like you to determine a tight big-O
+   bound (that is, the slowest growing function class that f is a part
+   of) or a generic big-O bound (any function class f is a part of, as
+   we asked for in this problem). *)
+  
 (* One advantage of big-O is that we can disregard constants in
 considering asymptotic performance of functions. We saw empirically
 that on large inputs, merge sort worked faster than insertion
@@ -209,9 +292,9 @@ Fill in the table below.
 (*               |    List length 10    |  List length 1000
                  |    Time (seconds)    |  Time (seconds)
 ------------------------------------------------------------
-Insertion Sort   |                      |
+Insertion Sort   |    0.00000215        |  0.0103
 ------------------------------------------------------------
-Delay Merge Sort |                      |
+Delay Merge Sort |    0.0516            |  0.0560
 ------------------------------------------------------------*)
 
 (* You likely found that InsertSort was faster than DelayMergeSort,
@@ -220,7 +303,7 @@ sorted by DelayMergeSort and InsertSort until DelayMergeSort runs
 faster than InsertSort. Record the size of a list for which this is
 true below. *)
    
-let exercise6 () = failwith "exercise6 not implemented"
+let exercise6 () = 10000 ;;
 
 (* Big-O also allows us to disregard constant multiplicative
 factors. In the next exercise, we work with a version of MergeSort
@@ -249,15 +332,15 @@ table below.
 (*                |    List length 10    |  List length 1000
                   |    Time (seconds)    |  Time (seconds)
 ------------------------------------------------------------
-Insertion Sort    |                      |
+Insertion Sort    |    0.00000191        |  0.00967
 ------------------------------------------------------------
-Double Merge Sort |                      |
+Double Merge Sort |    0.00000906        |  0.00174
 ------------------------------------------------------------*)
 
 (* Now record a list length for which you found DoubleMergeSort sorted
 faster than InsertSort. *)
    
-let exercise7 () = failwith "exercise6 not implemented"
+let exercise7 () = 1000 ;;
 
 (* An additional nice property of big-O is the ability to disregard
 lower-order terms of a function. In the reading, we found that:
@@ -290,14 +373,14 @@ below.
 (*                    |    List length 10    |  List length 1000
                       |    Time (seconds)    |  Time (seconds)
 -----------------------------------------------------------------
-Insertion Sort        |                      |
+Insertion Sort        |   0.00000286         |  0.0103
 -----------------------------------------------------------------
-Extra Term Merge Sort |                      |
+Extra Term Merge Sort |   0.00000620         |  0.00105
 -----------------------------------------------------------------*)
 
 (* Now record a list length for which ExtraTermMergeSort works faster
 than InsertSort. *)
-let exercise8 () = failwith "exercise6 not implemented"
+let exercise8 () = 1000 ;;
 
 (*....................................................................
 Exercise 9: More big-O
@@ -319,25 +402,31 @@ As a reminder, the Big O classes defined in our complexity ADT:
 
 (* f(x) = 10000 *)
 let exercise9a () : complexity list =
-  failwith "exercise9a not implemented" ;;
-  
+  [Constant; Logarithmic; Linear; LogLinear; Quadratic; Cubic; Exponential] ;;
+
 (* f(x) = 50x^100 + x^2 *)
 let exercise9b () : complexity list =
-  failwith "exercise9b not implemented" ;;
+  [Exponential] ;;
 
 (* f(x) = 30xlog(x) + 50x + 70 *)
-
 let exercise9c () : complexity list =
-  failwith "exercise9c not implemented" ;;
+  [LogLinear; Quadratic; Cubic; Exponential] ;;
 
 (* f(x) = 30x^2 * log(x) *)
 let exercise9d () : complexity list =
-  failwith "exercise9d not implemented" ;;
+  [Cubic; Exponential] ;;
+(* Note: This is a bit tricky. Because we are multiplying 30x^2 and
+   log(x), we can't simply disregard the log(x), as we could do if
+   adding it. 30x^2 * log(x) will not be quadratic, as the log(x) will
+   grow faster than any constant we multiply x^2 by. However, log(x)
+   grows slower than n, so we know x^2 * log(x) will grow more slowly
+   than x^2 * x, so f must grow more slowly than x^3, making this
+   function O(x^3) and O(2^x) *)
 
 (* f(x) = x + 60log(x) *)
 let exercise9e () : complexity list =
-  failwith "exercise9e not implemented" ;;
-
+  [Linear; LogLinear; Quadratic; Cubic; Exponential] ;;
+  
 (*====================================================================
 Part 3: Recurrence Equations
 
@@ -452,12 +541,13 @@ let rec sum (x : int list) : int =
 
 (* Describe the time complexity recurrence equations for `sum` as an
 ocaml function *)
-let time_sum (n : int) : int =
-  failwith "time_sum not yet implemented" ;;
+let rec time_sum (n : int) : int =
+  if n = 0 then k
+  else k + time_sum (n - 1);;
 
 (* What is its complexity? *) 
 let sum_complexity () : complexity =
-  failwith "sum_complexity not yet implemented" ;;
+  Linear;;
   
 (*....................................................................
 Exercise 11: Divider Recurrence Equations
@@ -472,11 +562,34 @@ let rec divider (x : int) : int =
   else if x <= 1 then 0
   else 1 + divider (x / 2);;
   
-let time_divider (n : int) : int =
-  failwith "time_sum not yet implemented" ;;
+let rec time_divider (n : int) : int =
+  if n = 0 || n = 1 then k
+  else k + time_divider (n / 2);;
 
+(* Note: Initially it may seem that `divider`'s input size can never
+   change: The input is an int, and only ever one int. However,
+   divider will repeat a given number of times depending on the value
+   of the argument. Thus the size of the input in divider is actually
+   the value of the integer input, rather than the length of a list
+   input as we had previously seen.
+   
+   We complete the unfolding process as below:
+     T_div(n) = k + T_div(n / 2)
+              = k + k + T_div(n / 4)
+              = k + k + K + T_div(n / 8)
+              = k + k + k + ... + T_div(0)
+              = k + k + k + ... + q
+
+   How many k's will we have in the end?  We will have as many k's as
+   times we divide n by 2 before hitting 0. This is approximately log
+   base 2 of n.
+
+     Thus, T_div(n) = k*log(n) + q
+                    = O(log(n))
+ *)
+  
 let divider_complexity () : complexity =
-  failwith "time_complexity not yet implemented" ;;
+  Logarithmic;;
 
 (*....................................................................
 Exercise 12: Find_min recurrence equations
@@ -503,17 +616,100 @@ let rec find_min (xs : int list) : int =
   | _ -> let xs1, xs2 = split xs in
          min (find_min xs1) (find_min xs2) ;;
 
-let time_split (n : int) : int =
-  failwith "time_split not yet implemented" ;;
+let rec time_split (n : int) : int =
+  if n = 0 || n = 1 then k
+  else k + time_split (n - 2) ;;
+
+(* Split considers 2 elements at a time, thus we subtract 2 in the
+   recursive case. We can unfold as below:
+
+   T_split(0) = T_split(1) = q
+   T_split(n) = k + T_split(n - 2)
+              = k + k + T_split(n - 4)
+              = k + k + ... + T(0)
+              = k + k + .... + q
+
+   How many k's will we have? Not exactly n, as we subtracted
+   2 each unfold. Instead, we will have n/2. Our closed
+   form solution is thus:
+
+   T_split(n) = k * (n / 2) + q
+
+   However, when discussing in big-O, this division by
+   two may be disregarded, and we have that T_split is O(n).
+ *)
 
 let split_complexity () : complexity =
-  failwith "split_complexity not yet implemented" ;;
+  Linear ;;
 
-let time_find_min (n : int) : int =
-  failwith "time_find_min not yet implemented" ;;
+let rec time_find_min (n : int) : int =
+  if n = 0 || n = 1 then k
+  else (time_split n) + 2 * time_find_min (n / 2) ;;
+  
+(* When unfolding `find_min`, you may have recognized the "Divide and
+   Conquer" pattern discussed in the reading.  You also had to know
+   the time complexity of `split` to determine the time complexity of
+   find min. Often, it can be useful to consider each helper
+   function's complexity separately. You can then use the derived
+   closed form solutions when calculating the time complexity of the
+   larger function.
+
+   T_fm(0) = T_fm(1) = c
+   T_fm(n) = k + T_split(n) + 2T_fm(n/2)    <-   We can immediately substitute our
+   T_fm(n) = k + k * (n / 2) + q + 2T_fm(n/2)    closed form solution for T_split
+   T_fm(n) = k + k * (n / 2) + q + k + 2T_split(n/2) + 4T_fm(n/4)
+   T_fm(n) = k + k * (n / 2) + q + k + 2k * (n / 4) + 2q + 4T_fm(n/4)
+   T_fm(n) = k + k * (n / 2) + q + k + k * (n / 2) + 2q + 4T_fm(n/4)
+   ....
+
+   We will end up unfolding log(n) times total. Each time we unfold we
+   add a constant related to the time to match and call functions, and
+   terms relating to the splitting time.  In total, our constant k
+   will be summed log(n) times, giving us a k * log(n) term in our
+   closed form solution.
+
+   Splitting adds two terms each time, one constant (q), and one
+   linear in the size of the list being split (k * n / 2). The linear
+   term stays a consistent k * n / 2. Though we make more splits, the
+   size of the list halves, and these forces cancel each other
+   out. (Ignoring for a moment the constant in the split closed
+   form solution, 2T_split(n/2) becomes 2(k * n / 4) = k * n / 2). As
+   we unfold log(n) times, adding a k * n / 2 term each time, we will
+   have a term of log(n) * k * n / 2 = k * nlog(n) / 2 in our closed
+   form.
+
+   We can now return to the constant in the closed form solution of
+   T_split.  How does this constant affect the closed form
+   solution. Let's look only at what happens to this constant in each
+   unfold:
+
+   T_fm(n) = k + k * (n / 2) + q + k + k * (n / 2) + 2q + 4T_fm(n/4)
+   T_fm(n) = ..... + q + .... + 2q + 4T_fm(n/4)
+   T_fm(n) = ..... + q + .... + 2q + .... + 4q + 8T_fm(n/8)
+
+   Each time we unfold, we double the number of q's we add.
+   Thus, at the k'th unfold, we add 2^k * q to our equation.
+   In the base case, we are at the log(n)th unfold. Though we have
+   been vague thus far, we assume a log base 2 for simplicity of
+   computation. Thus at the k'th unfold we add 2^(log(n)) * q.
+   This simplifies to n * q. As each term added is double the
+   term before, the total amount of steps added from this
+   component is less than 2 * n * q. Thus, this constant adds a linear
+   term to our closed form solution.
+
+   The last component of our closed form solution is the constant, c,
+   that encompassess the time the two base cases take.
+
+   Gathering all our terms, we have:
+   T_fm(n) = k * log(n) + (k / 2) * nlog(n) + 2 * q * n + c
+
+   To find the closest big O class, we need only look at the largest
+   term. This term is (k / 2) * n log(n). We can drop constant factors,
+   finding that find_min is O(n log(n))
+ *)
 
 let find_min_complexity () : complexity =
-  failwith "find_min_complexity not yet implemented" ;;
+    LogLinear ;;
 
 (*====================================================================
 Part 4: Tradeoffs
@@ -605,7 +801,10 @@ let time_multiply (mult : int -> int -> int)
                   (x : int)
                   (y : int)
                 : float =
-  failwith "time_multiply not yet implemented";;
+  let _result, time = Absbook.call_timed
+                        (fun (x, y) -> mult x y)
+                        (x, y) in
+  time ;;
 
 (*....................................................................
 Exercise 14: Fill in the table below:
@@ -615,16 +814,16 @@ Exercise 14: Fill in the table below:
                        |                      |  3237461243
                        |    Time (seconds)    |  Time (seconds)
 -----------------------------------------------------------------
-Repeated Addition      |                      |
+Repeated Addition      |     0.00000286       |  83.5
 -----------------------------------------------------------------
-Grade School Algorithm |                      |
+Grade School Algorithm |     0.00000310       |  0.0000129
 -----------------------------------------------------------------
-Karatsuba              |                      |
+Karatsuba              |     0.00000787       |  0.0000281
 -----------------------------------------------------------------
-OCaml Native ( * )     |                      |
+OCaml Native ( * )     |     0.00000119       |  ~0
 -----------------------------------------------------------------
  *)
-        
+  
 (* Questions to consider:
 
       1. Which algorithm above was easiest to understand?
